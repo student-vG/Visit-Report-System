@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Visit Report System</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="Rolon Seals Visit Report System - Efficiently manage and track customer visits">
+    <title>Rolon Seals Visit Report System</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="./manifest.json">
-    <script defer src="./sw.js"></script>
     <style>
         :root {
             --primary: #2c3e50;
@@ -23,6 +25,7 @@
             --table-header: #20cd68;
             --table-row: #f9f9f9;
             --table-alt: #ecf0f1;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
         }
         
         * {
@@ -39,27 +42,7 @@
             line-height: 1.6;
             min-height: 100vh;
             padding-bottom: 20px;
-         }
-        .hidden {
-  display: none;
-}
-
-.btn-warning {
-  background: var(--warning);
-}
-
-.btn-warning:hover {
-  background: #e67e22;
-}
-
-.download-btn {
-  background: var(--accent);
-  margin-top: 10px;
-}
-
-.download-btn:hover {
-  background: #219653;
-}
+        }
         
         .container {
             width: 100%;
@@ -193,19 +176,16 @@
         
         .btn-danger:hover {
             background: #c0392b;
-            
         }
         
         .btn-success {
             background: var(--success);
             background: linear-gradient(45deg, #11998E, #38EF7D);
-
         }
         
         .btn-success:hover {
             background: #219653;
             background: linear-gradient(135deg, #9BE15D, #00E3AE);
-
         }
         
         .btn-accent {
@@ -242,12 +222,16 @@
         
         th {
             background-color: var(--table-header);
-
-            background:linear-gradient(90deg,#0aa14a,#15ac52);
+            background: linear-gradient(90deg, #0aa14a, #15ac52);
             color: white;
             font-weight: 600;
             position: sticky;
             top: 0;
+            cursor: pointer;
+        }
+        
+        th:hover {
+            background: linear-gradient(90deg, #0a8e3f, #129a48);
         }
         
         tr {
@@ -295,7 +279,6 @@
         
         .alert-success {
             background-color: var(--success);
-            
         }
         
         .alert-danger {
@@ -362,11 +345,164 @@
             color: var(--secondary);
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--modal-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
         }
         
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: var(--danger);
+            background: none;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Date Picker Improvements */
+        .date-input-container {
+            position: relative;
+        }
+        
+        .date-today-btn {
+            position: absolute;
+            right: 10px;
+            top: 38px;
+            background: #f1f1f1;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .date-today-btn:hover {
+            background: #ddd;
+        }
+        
+        /* Recent Entries */
+        .recent-entries {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .recent-entry {
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .recent-entry:hover {
+            background: #f9f9f9;
+            border-color: var(--secondary);
+        }
+        
+        /* Autocomplete */
+        .autocomplete-container {
+            position: relative;
+        }
+        
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .autocomplete-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .autocomplete-item:hover {
+            background: #f0f8ff;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Responsive Improvements */
         @media (max-width: 768px) {
             .tabs {
                 flex-direction: column;
@@ -387,7 +523,48 @@
             }
 
             .logo h1 {
-                font-size: 1rem;
+                font-size: 1.5rem;
+            }
+            
+            .modal {
+                width: 95%;
+                margin: 0 auto;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer button {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .tab {
+                padding: 10px 15px;
+            }
+            
+            input, textarea, select {
+                padding: 10px;
+            }
+            
+            .contact-selector {
+                top: 34px;
+                width: 35px;
+                height: 35px;
             }
         }
         
@@ -447,8 +624,7 @@
             border-radius: 4px;
         }
 
-
-        .logo  h1{
+        .logo h1 {
             font-size: 2.5rem;
             color: var(--accent);
             text-shadow: 0 0 14px rgba(0, 0, 0, 0.166);
@@ -457,14 +633,77 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        /* PWA Install Prompt */
+        .pwa-install-prompt {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 350px;
+            animation: slideInUp 0.5s;
+        }
+        
+        .pwa-install-prompt p {
+            margin: 0;
+            flex: 1;
+        }
+        
+        .pwa-install-prompt button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .pwa-install-prompt .close-prompt {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Sorting indicators */
+        .sort-indicator {
+            margin-left: 5px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <div class="logo">
-                <i class="fas fa-clipboard-list logo-icon" ></i>
-                <h1> Rolon Seals Visit Report System</h1>
+                <i class="fas fa-clipboard-list logo-icon"></i>
+                <h1>Rolon Seals Visit Report System</h1>
             </div>
             <p>Efficiently manage and track customer visits</p>
         </header>
@@ -498,13 +737,23 @@
             
             <form id="visit-form">
                 <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" required>
+                    <label for="serial-no">Serial No</label>
+                    <input type="number" id="serial-no" required>
+                    <small style="color:#666;">Enter starting serial number</small>
                 </div>
                 
                 <div class="form-group">
+                    <label for="date">Date</label>
+                    <div class="date-input-container">
+                        <input type="date" id="date" required>
+                        <button type="button" class="date-today-btn" id="today-btn">Today</button>
+                    </div>
+                </div>
+                
+                <div class="form-group autocomplete-container">
                     <label for="customer-name">Customer Name</label>
                     <input type="text" id="customer-name" required>
+                    <div class="autocomplete-list" id="customer-autocomplete"></div>
                 </div>
                 
                 <div class="form-group">
@@ -534,9 +783,10 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group autocomplete-container">
                     <label for="visiting-purpose">Visiting Purpose</label>
-                    <textarea id="visiting-purpose" required></textarea>
+                    <textarea id="visiting-purpose"></textarea>
+                    <div class="autocomplete-list" id="purpose-autocomplete"></div>
                 </div>
                 
                 <div class="actions">
@@ -548,6 +798,13 @@
                     </button>
                 </div>
             </form>
+            
+            <div class="recent-entries" id="recent-entries">
+                <h3><i class="fas fa-history"></i> Recent Entries</h3>
+                <div id="recent-entries-list">
+                    <p>No recent entries yet. Your entries will appear here.</p>
+                </div>
+            </div>
             
             <div id="multiple-entry" class="hidden">
                 <h3><i class="fas fa-list"></i> Multiple Entries</h3>
@@ -569,11 +826,12 @@
                 <table id="reports-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Customer Name</th>
-                            <th>Report No</th>
-                            <th>Contact Person</th>
-                            <th>Contact No</th>
+                            <th data-sort="serialNo">Serial No <span class="sort-indicator">↕</span></th>
+                            <th data-sort="date">Date <span class="sort-indicator">↕</span></th>
+                            <th data-sort="customerName">Customer Name <span class="sort-indicator">↕</span></th>
+                            <th data-sort="reportNo">Report No <span class="sort-indicator">↕</span></th>
+                            <th data-sort="contactPerson">Contact Person <span class="sort-indicator">↕</span></th>
+                            <th data-sort="contactNo">Contact No <span class="sort-indicator">↕</span></th>
                             <th>Visiting Purpose</th>
                             <th>Actions</th>
                         </tr>
@@ -615,6 +873,15 @@
                 <input type="number" id="year-select" min="2020" max="2030" value="2025">
             </div>
             
+            <div class="form-group">
+                <label for="sort-export">Sort Export By</label>
+                <select id="sort-export">
+                    <option value="serialNo">Serial No</option>
+                    <option value="date" selected>Date</option>
+                    <option value="customerName">Customer Name</option>
+                </select>
+            </div>
+            
             <div class="actions">
                 <button id="generate-pdf" class="btn-success">
                     <i class="fas fa-file-pdf"></i>Generate PDF Report
@@ -625,11 +892,6 @@
                 <button id="export-json" class="btn-accent">
                     <i class="fas fa-file-code"></i>Export as JSON
                 </button>
-                <div id="install-button" class="hidden">
-  <button class="download-btn">
-    <i class="fas fa-download"></i>Install App
-  </button>
-</div>
             </div>
             
             <div class="download-section">
@@ -648,6 +910,79 @@
         </div>
         
         <div id="alert-area"></div>
+    </div>
+
+    <!-- Modal for Viewing/Editing Reports -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">View Report</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="modal-form">
+                    <input type="hidden" id="modal-index">
+                    <div class="form-group">
+                        <label for="modal-serial-no">Serial No</label>
+                        <input type="number" id="modal-serial-no" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-date">Date</label>
+                        <div class="date-input-container">
+                            <input type="date" id="modal-date" required>
+                            <button type="button" class="date-today-btn" id="modal-today-btn">Today</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-customer-name">Customer Name</label>
+                        <input type="text" id="modal-customer-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-report-no">Visit Report No</label>
+                        <input type="text" id="modal-report-no" required readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-contact-person">Contact Person</label>
+                        <input type="text" id="modal-contact-person">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-contact-no">Contact No</label>
+                        <input type="tel" id="modal-contact-no">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-visiting-purpose">Visiting Purpose</label>
+                        <textarea id="modal-visiting-purpose"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="modal-delete-btn">
+                    <i class="fas fa-trash"></i>Delete
+                </button>
+                <button class="btn-accent" id="modal-cancel-btn">
+                    <i class="fas fa-times"></i>Cancel
+                </button>
+                <button class="btn-success" id="modal-save-btn">
+                    <i class="fas fa-save"></i>Save Changes
+                </button>
+                <button class="btn-warning hidden" id="modal-edit-btn">
+                    <i class="fas fa-edit"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Install Prompt -->
+    <div class="pwa-install-prompt hidden" id="pwa-prompt">
+        <p>Install this app for a better experience</p>
+        <button class="btn-success" id="pwa-install-btn">Install</button>
+        <button class="close-prompt" id="pwa-close-btn">&times;</button>
     </div>
 
     <script>
@@ -679,24 +1014,67 @@
         const installButton = document.getElementById('install-button');
         const notSupported = document.getElementById('not-supported');
         const noContacts = document.getElementById('no-contacts');
+        const todayBtn = document.getElementById('today-btn');
+        const modalTodayBtn = document.getElementById('modal-today-btn');
+        const customerAutocomplete = document.getElementById('customer-autocomplete');
+        const purposeAutocomplete = document.getElementById('purpose-autocomplete');
+        const customerNameInput = document.getElementById('customer-name');
+        const visitingPurposeInput = document.getElementById('visiting-purpose');
+        const recentEntriesList = document.getElementById('recent-entries-list');
+        const sortExport = document.getElementById('sort-export');
+        
+        // Modal Elements
+        const reportModal = document.getElementById('report-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalForm = document.getElementById('modal-form');
+        const modalIndex = document.getElementById('modal-index');
+        const modalSerialNo = document.getElementById('modal-serial-no');
+        const modalDate = document.getElementById('modal-date');
+        const modalCustomerName = document.getElementById('modal-customer-name');
+        const modalReportNo = document.getElementById('modal-report-no');
+        const modalContactPerson = document.getElementById('modal-contact-person');
+        const modalContactNo = document.getElementById('modal-contact-no');
+        const modalVisitingPurpose = document.getElementById('modal-visiting-purpose');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        const modalDeleteBtn = document.getElementById('modal-delete-btn');
+        const modalEditBtn = document.getElementById('modal-edit-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // PWA Elements
+        const pwaPrompt = document.getElementById('pwa-prompt');
+        const pwaInstallBtn = document.getElementById('pwa-install-btn');
+        const pwaCloseBtn = document.getElementById('pwa-close-btn');
         
         // State
         let multipleEntries = [];
         let allReports = JSON.parse(localStorage.getItem('visitReports')) || [];
         let deferredPrompt;
         let contacts = [];
+        let isEditing = false;
+        let currentSort = { column: 'date', direction: 'asc' };
+        let recentEntries = JSON.parse(localStorage.getItem('recentEntries')) || [];
+        let customerSuggestions = JSON.parse(localStorage.getItem('customerSuggestions')) || [];
+        let purposeSuggestions = JSON.parse(localStorage.getItem('purposeSuggestions')) || [];
         
         // Initialize the app
         function init() {
             // Set today's date as default
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
+            setTodayDate();
             
             // Generate a report number
             document.getElementById('report-no').value = generateReportNumber();
             
+            // Set initial serial number
+            document.getElementById('serial-no').value = allReports.length > 0 
+                ? Math.max(...allReports.map(r => parseInt(r.serialNo) || 0)) + 1 
+                : 1;
+            
             // Load existing reports
             renderReports();
+            
+            // Render recent entries
+            renderRecentEntries();
             
             // Set up event listeners
             setupEventListeners();
@@ -708,6 +1086,34 @@
             
             // Check if app can be installed
             checkInstallable();
+            
+            // Register service worker for PWA functionality
+            registerServiceWorker();
+        }
+        
+        // Register service worker
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            }
+        }
+        
+        // Set today's date in the date input
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+        
+        // Set today's date in the modal date input
+        function setModalTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            modalDate.value = today;
         }
         
         // Check if app can be installed
@@ -716,16 +1122,19 @@
                 e.preventDefault();
                 deferredPrompt = e;
                 installButton.classList.remove('hidden');
+                pwaPrompt.classList.remove('hidden');
             });
             
             window.addEventListener('appinstalled', () => {
                 installButton.classList.add('hidden');
+                pwaPrompt.classList.add('hidden');
                 showAlert('App installed successfully!', 'success');
             });
             
             // Check if the app is already installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 installButton.classList.add('hidden');
+                pwaPrompt.classList.add('hidden');
             }
         }
         
@@ -787,11 +1196,11 @@
                 const contactItem = document.createElement('div');
                 contactItem.className = 'contact-item';
                 contactItem.setAttribute('data-number', phone);
+                contactItem.setAttribute('data-name', name);
                 contactItem.textContent = `${name} - ${phone}`;
                 
                 contactItem.addEventListener('click', () => {
                     document.getElementById('contact-no').value = phone;
-                    document.getElementById('contact-person').value = name;
                     contactList.style.display = 'none';
                 });
                 
@@ -823,6 +1232,23 @@
                 document.getElementById('report-no').value = generateReportNumber();
             });
             
+            // Today button
+            todayBtn.addEventListener('click', () => {
+                setTodayDate();
+                document.getElementById('report-no').value = generateReportNumber();
+            });
+            
+            // Modal today button
+            modalTodayBtn.addEventListener('click', () => {
+                setModalTodayDate();
+                modalReportNo.value = generateModalReportNumber();
+            });
+            
+            // Modal date change
+            modalDate.addEventListener('change', () => {
+                modalReportNo.value = generateModalReportNumber();
+            });
+            
             // Entry type change
             entryType.addEventListener('change', () => {
                 if (entryType.value === 'multiple') {
@@ -839,6 +1265,7 @@
                 e.preventDefault();
                 
                 const report = {
+                    serialNo: document.getElementById('serial-no').value,
                     date: document.getElementById('date').value,
                     customerName: document.getElementById('customer-name').value,
                     reportNo: document.getElementById('report-no').value,
@@ -847,17 +1274,40 @@
                     visitingPurpose: document.getElementById('visiting-purpose').value
                 };
                 
+                // Add to suggestions if not already present
+                if (!customerSuggestions.includes(report.customerName)) {
+                    customerSuggestions.push(report.customerName);
+                    localStorage.setItem('customerSuggestions', JSON.stringify(customerSuggestions));
+                }
+                
+                if (report.visitingPurpose && !purposeSuggestions.includes(report.visitingPurpose)) {
+                    purposeSuggestions.push(report.visitingPurpose);
+                    localStorage.setItem('purposeSuggestions', JSON.stringify(purposeSuggestions));
+                }
+                
+                // Add to recent entries
+                recentEntries.unshift(report);
+                if (recentEntries.length > 5) {
+                    recentEntries.pop();
+                }
+                localStorage.setItem('recentEntries', JSON.stringify(recentEntries));
+                renderRecentEntries();
+                
                 if (entryType.value === 'single') {
                     saveReport(report);
                     showAlert('Report saved successfully!', 'success');
                     visitForm.reset();
-                    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+                    setTodayDate();
+                    // Increment serial number for next entry
+                    document.getElementById('serial-no').value = parseInt(report.serialNo) + 1;
                     document.getElementById('report-no').value = generateReportNumber();
                 } else {
                     multipleEntries.push(report);
                     renderMultipleEntries();
                     visitForm.reset();
-                    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+                    setTodayDate();
+                    // Increment serial number for next entry
+                    document.getElementById('serial-no').value = parseInt(report.serialNo) + 1;
                     document.getElementById('report-no').value = generateReportNumber();
                 }
             });
@@ -865,7 +1315,7 @@
             // Clear form
             clearFormBtn.addEventListener('click', () => {
                 visitForm.reset();
-                document.getElementById('date').value = new Date().toISOString().split('T')[0];
+                setTodayDate();
                 document.getElementById('report-no').value = generateReportNumber();
             });
             
@@ -931,8 +1381,94 @@
                 installButton.addEventListener('click', installApp);
             }
             
+            // PWA install button
+            pwaInstallBtn.addEventListener('click', installApp);
+            
+            // PWA close button
+            pwaCloseBtn.addEventListener('click', () => {
+                pwaPrompt.classList.add('hidden');
+            });
+            
             // No contacts item click
             noContacts.addEventListener('click', accessDeviceContacts);
+            
+            // Modal events
+            closeModalBtn.addEventListener('click', closeModal);
+            modalCancelBtn.addEventListener('click', closeModal);
+            modalSaveBtn.addEventListener('click', saveModalChanges);
+            modalDeleteBtn.addEventListener('click', deleteModalReport);
+            modalEditBtn.addEventListener('click', enableModalEditing);
+            
+            // Close modal when clicking outside
+            reportModal.addEventListener('click', (e) => {
+                if (e.target === reportModal) {
+                    closeModal();
+                }
+            });
+            
+            // Customer name autocomplete
+            customerNameInput.addEventListener('input', () => {
+                showAutocomplete(customerNameInput, customerAutocomplete, customerSuggestions);
+            });
+            
+            // Visiting purpose autocomplete
+            visitingPurposeInput.addEventListener('input', () => {
+                showAutocomplete(visitingPurposeInput, purposeAutocomplete, purposeSuggestions);
+            });
+            
+            // Close autocomplete when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!customerNameInput.contains(e.target) && !customerAutocomplete.contains(e.target)) {
+                    customerAutocomplete.style.display = 'none';
+                }
+                if (!visitingPurposeInput.contains(e.target) && !purposeAutocomplete.contains(e.target)) {
+                    purposeAutocomplete.style.display = 'none';
+                }
+            });
+            
+            // Table sorting
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.getAttribute('data-sort');
+                    if (currentSort.column === column) {
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.column = column;
+                        currentSort.direction = 'asc';
+                    }
+                    renderReports();
+                });
+            });
+        }
+        
+        // Show autocomplete suggestions
+        function showAutocomplete(input, list, suggestions) {
+            const value = input.value.toLowerCase();
+            if (value.length < 1) {
+                list.style.display = 'none';
+                return;
+            }
+            
+            const filtered = suggestions.filter(s => s.toLowerCase().includes(value));
+            
+            if (filtered.length === 0) {
+                list.style.display = 'none';
+                return;
+            }
+            
+            list.innerHTML = '';
+            filtered.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = suggestion;
+                item.addEventListener('click', () => {
+                    input.value = suggestion;
+                    list.style.display = 'none';
+                });
+                list.appendChild(item);
+            });
+            
+            list.style.display = 'block';
         }
         
         // Generate a unique report number in the format DVG 2024-25/MAY 02
@@ -949,11 +1485,57 @@
             return `DVG ${year}-${nextYearShort}/${month} ${day}`;
         }
         
+        // Generate report number for modal
+        function generateModalReportNumber() {
+            const date = modalDate.value ? new Date(modalDate.value) : new Date();
+            
+            const year = date.getFullYear();
+            const nextYearShort = (year + 1).toString().slice(-2);
+            const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const month = monthNames[date.getMonth()];
+            const day = date.getDate().toString().padStart(2, '0');
+            
+            return `DVG ${year}-${nextYearShort}/${month} ${day}`;
+        }
+        
         // Save a report to localStorage
         function saveReport(report) {
             allReports.push(report);
             localStorage.setItem('visitReports', JSON.stringify(allReports));
             renderReports();
+        }
+        
+        // Render recent entries
+        function renderRecentEntries() {
+            recentEntriesList.innerHTML = '';
+            
+            if (recentEntries.length === 0) {
+                recentEntriesList.innerHTML = '<p>No recent entries yet. Your entries will appear here.</p>';
+                return;
+            }
+            
+            recentEntries.forEach((entry, index) => {
+                const entryEl = document.createElement('div');
+                entryEl.className = 'recent-entry';
+                entryEl.innerHTML = `
+                    <strong>#${entry.serialNo} - ${formatDate(entry.date)}</strong><br>
+                    <strong>${entry.customerName}</strong><br>
+                    <span class="report-no">${entry.reportNo}</span><br>
+                    <small>${entry.visitingPurpose.substring(0, 50)}${entry.visitingPurpose.length > 50 ? '...' : ''}</small>
+                `;
+                
+                entryEl.addEventListener('click', () => {
+                    document.getElementById('serial-no').value = entry.serialNo;
+                    document.getElementById('date').value = entry.date;
+                    document.getElementById('customer-name').value = entry.customerName;
+                    document.getElementById('report-no').value = entry.reportNo;
+                    document.getElementById('contact-person').value = entry.contactPerson || '';
+                    document.getElementById('contact-no').value = entry.contactNo || '';
+                    document.getElementById('visiting-purpose').value = entry.visitingPurpose || '';
+                });
+                
+                recentEntriesList.appendChild(entryEl);
+            });
         }
         
         // Render multiple entries list
@@ -980,13 +1562,18 @@
                 
                 listItem.innerHTML = `
                     <div>
-                        <strong>${formatDate(entry.date)}</strong> - ${entry.customerName}
+                        <strong>#${entry.serialNo} - ${formatDate(entry.date)}</strong> - ${entry.customerName}
                         <br><span class="report-no">${entry.reportNo}</span>
                         <br><small>${entry.visitingPurpose.substring(0, 50)}${entry.visitingPurpose.length > 50 ? '...' : ''}</small>
                     </div>
-                    <button class="action-btn btn-danger" data-index="${index}">
-                        <i class="fas fa-times"></i>Remove
-                    </button>
+                    <div class="actions">
+                        <button class="action-btn" data-index="${index}">
+                            <i class="fas fa-edit"></i>Edit
+                        </button>
+                        <button class="action-btn btn-danger" data-index="${index}">
+                            <i class="fas fa-times"></i>Remove
+                        </button>
+                    </div>
                 `;
                 
                 list.appendChild(listItem);
@@ -994,8 +1581,16 @@
             
             multipleEntriesList.appendChild(list);
             
-            // Add event listeners to remove buttons
-            const removeButtons = multipleEntriesList.querySelectorAll('button');
+            // Add event listeners to action buttons
+            const editButtons = multipleEntriesList.querySelectorAll('.actions button:first-child');
+            editButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.closest('button').getAttribute('data-index'));
+                    editMultipleEntry(index);
+                });
+            });
+            
+            const removeButtons = multipleEntriesList.querySelectorAll('.actions button.btn-danger');
             removeButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     const index = parseInt(e.target.closest('button').getAttribute('data-index'));
@@ -1003,6 +1598,30 @@
                     renderMultipleEntries();
                 });
             });
+        }
+        
+        // Edit a multiple entry
+        function editMultipleEntry(index) {
+            const entry = multipleEntries[index];
+            
+            // Populate the form with the entry data
+            document.getElementById('serial-no').value = entry.serialNo;
+            document.getElementById('date').value = entry.date;
+            document.getElementById('customer-name').value = entry.customerName;
+            document.getElementById('report-no').value = entry.reportNo;
+            document.getElementById('contact-person').value = entry.contactPerson || '';
+            document.getElementById('contact-no').value = entry.contactNo || '';
+            document.getElementById('visiting-purpose').value = entry.visitingPurpose || '';
+            
+            // Remove the entry from multiple entries
+            multipleEntries.splice(index, 1);
+            renderMultipleEntries();
+            
+            // Switch to single entry mode
+            entryType.value = 'single';
+            multipleEntrySection.classList.add('hidden');
+            
+            showAlert('Entry loaded for editing', 'success');
         }
         
         // Render reports table
@@ -1021,19 +1640,51 @@
                 );
             }
             
+            // Sort reports
+            filteredReports.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (currentSort.column === 'date') {
+                    valueA = new Date(a.date);
+                    valueB = new Date(b.date);
+                } else if (currentSort.column === 'serialNo') {
+                    valueA = parseInt(a.serialNo);
+                    valueB = parseInt(b.serialNo);
+                } else {
+                    valueA = a[currentSort.column] || '';
+                    valueB = b[currentSort.column] || '';
+                }
+                
+                if (valueA < valueB) return currentSort.direction === 'asc' ? -1 : 1;
+                if (valueA > valueB) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Update sort indicators
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                const indicator = th.querySelector('.sort-indicator');
+                if (th.getAttribute('data-sort') === currentSort.column) {
+                    indicator.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+                } else {
+                    indicator.textContent = '↕';
+                }
+            });
+            
             if (filteredReports.length === 0) {
                 reportsBody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center;">No reports found</td>
+                        <td colspan="8" style="text-align: center;">No reports found</td>
                     </tr>
                 `;
                 return;
             }
             
             filteredReports.forEach((report, index) => {
+                const originalIndex = allReports.findIndex(r => r.reportNo === report.reportNo);
                 const row = document.createElement('tr');
                 
                 row.innerHTML = `
+                    <td>${report.serialNo}</td>
                     <td>${formatDate(report.date)}</td>
                     <td>${report.customerName}</td>
                     <td class="report-no">${report.reportNo}</td>
@@ -1041,11 +1692,8 @@
                     <td>${report.contactNo || '-'}</td>
                     <td>${report.visitingPurpose.substring(0, 50)}${report.visitingPurpose.length > 50 ? '...' : ''}</td>
                     <td class="actions">
-                        <button class="action-btn" data-index="${index}">
+                        <button class="action-btn" data-index="${originalIndex}">
                             <i class="fas fa-eye"></i>View
-                        </button>
-                        <button class="action-btn btn-danger" data-index="${index}">
-                            <i class="fas fa-trash"></i>Delete
                         </button>
                     </td>
                 `;
@@ -1054,41 +1702,111 @@
             });
             
             // Add event listeners to action buttons
-            const viewButtons = reportsBody.querySelectorAll('.actions button:first-child');
+            const viewButtons = reportsBody.querySelectorAll('.actions button');
             viewButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     const index = parseInt(e.target.closest('button').getAttribute('data-index'));
-                    viewReport(allReports[index]);
+                    openModal(allReports[index], index, 'view');
                 });
             });
+        }
+        
+        // Open modal for viewing/editing
+        function openModal(report, index, mode) {
+            isEditing = mode === 'edit';
             
-            const deleteButtons = reportsBody.querySelectorAll('.actions button.btn-danger');
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.closest('button').getAttribute('data-index'));
-                    deleteReport(index);
+            // Populate modal with report data
+            modalIndex.value = index;
+            modalSerialNo.value = report.serialNo;
+            modalDate.value = report.date;
+            modalCustomerName.value = report.customerName;
+            modalReportNo.value = report.reportNo;
+            modalContactPerson.value = report.contactPerson || '';
+            modalContactNo.value = report.contactNo || '';
+            modalVisitingPurpose.value = report.visitingPurpose || '';
+            
+            // Set modal title and button visibility based on mode
+            if (mode === 'view') {
+                modalTitle.textContent = 'View Report';
+                modalSaveBtn.classList.add('hidden');
+                modalDeleteBtn.classList.add('hidden');
+                modalEditBtn.classList.remove('hidden');
+                
+                // Make inputs readonly
+                Array.from(modalForm.elements).forEach(element => {
+                    element.readOnly = true;
                 });
+                modalSerialNo.readOnly = false; // Allow changing serial number even in view mode
+            } else {
+                modalTitle.textContent = 'Edit Report';
+                modalSaveBtn.classList.remove('hidden');
+                modalDeleteBtn.classList.remove('hidden');
+                modalEditBtn.classList.add('hidden');
+                
+                // Make inputs editable
+                Array.from(modalForm.elements).forEach(element => {
+                    element.readOnly = false;
+                });
+            }
+            
+            // Show modal
+            reportModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Enable editing in modal
+        function enableModalEditing() {
+            modalTitle.textContent = 'Edit Report';
+            modalSaveBtn.classList.remove('hidden');
+            modalDeleteBtn.classList.remove('hidden');
+            modalEditBtn.classList.add('hidden');
+            
+            // Make inputs editable
+            Array.from(modalForm.elements).forEach(element => {
+                element.readOnly = false;
             });
         }
         
-        // View a report
-        function viewReport(report) {
-            // Show report in a modal or alert for simplicity
-            alert(`
-                Date: ${formatDate(report.date)}
-                Customer: ${report.customerName}
-                Report No: ${report.reportNo}
-                Contact: ${report.contactPerson || 'N/A'} (${report.contactNo || 'N/A'})
-                Purpose: ${report.visitingPurpose}
-            `);
+        // Close modal
+        function closeModal() {
+            reportModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Reset form
+            setTimeout(() => {
+                modalForm.reset();
+            }, 300);
         }
         
-        // Delete a report
-        function deleteReport(index) {
+        // Save changes from modal
+        function saveModalChanges() {
+            const index = parseInt(modalIndex.value);
+            
+            allReports[index] = {
+                serialNo: modalSerialNo.value,
+                date: modalDate.value,
+                customerName: modalCustomerName.value,
+                reportNo: modalReportNo.value,
+                contactPerson: modalContactPerson.value,
+                contactNo: modalContactNo.value,
+                visitingPurpose: modalVisitingPurpose.value
+            };
+            
+            localStorage.setItem('visitReports', JSON.stringify(allReports));
+            renderReports();
+            closeModal();
+            showAlert('Report updated successfully!', 'success');
+        }
+        
+        // Delete report from modal
+        function deleteModalReport() {
+            const index = parseInt(modalIndex.value);
+            
             if (confirm('Are you sure you want to delete this report?')) {
                 allReports.splice(index, 1);
                 localStorage.setItem('visitReports', JSON.stringify(allReports));
                 renderReports();
+                closeModal();
                 showAlert('Report deleted successfully', 'success');
             }
         }
@@ -1097,9 +1815,10 @@
         function generatePdf() {
             const month = document.getElementById('month-select').value;
             const year = document.getElementById('year-select').value;
+            const sortBy = sortExport.value;
             
             // Filter reports by selected month and year
-            const filteredReports = allReports.filter(report => {
+            let filteredReports = allReports.filter(report => {
                 const reportDate = new Date(report.date);
                 return reportDate.getMonth() + 1 == month && reportDate.getFullYear() == year;
             });
@@ -1108,6 +1827,26 @@
                 showAlert('No reports found for the selected period', 'danger');
                 return;
             }
+            
+            // Sort reports for export
+            filteredReports.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (sortBy === 'date') {
+                    valueA = new Date(a.date);
+                    valueB = new Date(b.date);
+                } else if (sortBy === 'serialNo') {
+                    valueA = parseInt(a.serialNo);
+                    valueB = parseInt(b.serialNo);
+                } else {
+                    valueA = a[sortBy] || '';
+                    valueB = b[sortBy] || '';
+                }
+                
+                if (valueA < valueB) return -1;
+                if (valueA > valueB) return 1;
+                return 0;
+            });
             
             // Create PDF
             const doc = new jsPDF();
@@ -1124,11 +1863,12 @@
             doc.text(`${monthNames[month - 1]} ${year}`, 105, 22, { align: 'center' });
             
             // Add table
-            const tableColumn = ["Date", "Customer", "Report No", "Contact Person", "Contact No", "Purpose"];
+            const tableColumn = ["Sr No", "Date", "Customer", "Report No", "Contact Person", "Contact No", "Purpose"];
             const tableRows = [];
             
             filteredReports.forEach(report => {
                 const reportData = [
+                    report.serialNo,
                     formatDate(report.date),
                     report.customerName,
                     report.reportNo,
@@ -1169,9 +1909,10 @@
         function exportExcel() {
             const month = document.getElementById('month-select').value;
             const year = document.getElementById('year-select').value;
+            const sortBy = sortExport.value;
             
             // Filter reports by selected month and year
-            const filteredReports = allReports.filter(report => {
+            let filteredReports = allReports.filter(report => {
                 const reportDate = new Date(report.date);
                 return reportDate.getMonth() + 1 == month && reportDate.getFullYear() == year;
             });
@@ -1181,8 +1922,29 @@
                 return;
             }
             
+            // Sort reports for export
+            filteredReports.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (sortBy === 'date') {
+                    valueA = new Date(a.date);
+                    valueB = new Date(b.date);
+                } else if (sortBy === 'serialNo') {
+                    valueA = parseInt(a.serialNo);
+                    valueB = parseInt(b.serialNo);
+                } else {
+                    valueA = a[sortBy] || '';
+                    valueB = b[sortBy] || '';
+                }
+                
+                if (valueA < valueB) return -1;
+                if (valueA > valueB) return 1;
+                return 0;
+            });
+            
             // Prepare data for Excel
             const excelData = filteredReports.map(report => ({
+                'Serial No': report.serialNo,
                 'Date': formatDate(report.date),
                 'Customer Name': report.customerName,
                 'Report No': report.reportNo,
@@ -1210,9 +1972,10 @@
         function exportJson() {
             const month = document.getElementById('month-select').value;
             const year = document.getElementById('year-select').value;
+            const sortBy = sortExport.value;
             
             // Filter reports by selected month and year
-            const filteredReports = allReports.filter(report => {
+            let filteredReports = allReports.filter(report => {
                 const reportDate = new Date(report.date);
                 return reportDate.getMonth() + 1 == month && reportDate.getFullYear() == year;
             });
@@ -1221,6 +1984,26 @@
                 showAlert('No reports found for the selected period', 'danger');
                 return;
             }
+            
+            // Sort reports for export
+            filteredReports.sort((a, b) => {
+                let valueA, valueB;
+                
+                if (sortBy === 'date') {
+                    valueA = new Date(a.date);
+                    valueB = new Date(b.date);
+                } else if (sortBy === 'serialNo') {
+                    valueA = parseInt(a.serialNo);
+                    valueB = parseInt(b.serialNo);
+                } else {
+                    valueA = a[sortBy] || '';
+                    valueB = b[sortBy] || '';
+                }
+                
+                if (valueA < valueB) return -1;
+                if (valueA > valueB) return 1;
+                return 0;
+            });
             
             const dataStr = JSON.stringify(filteredReports, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -1258,157 +2041,6 @@
         
         // Initialize the app when the page loads
         document.addEventListener('DOMContentLoaded', init);
-    </script>4
-
-    <script>
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
-}
-
-// Install Prompt Handling
-let deferredPrompt;
-const installButton = document.getElementById('install-button');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the mini-infobar from appearing on mobile
-  e.preventDefault();
-  // Stash the event so it can be triggered later
-  deferredPrompt = e;
-  // Show the install button
-  installButton.classList.remove('hidden');
-  
-  installButton.addEventListener('click', () => {
-    // Hide the install button
-    installButton.classList.add('hidden');
-    // Show the install prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      deferredPrompt = null;
-    });
-  });
-});
-
-// App Installed Event
-window.addEventListener('appinstalled', () => {
-  console.log('PWA was installed');
-  installButton.classList.add('hidden');
-});
-
-// Check if app is already installed
-if (window.matchMedia('(display-mode: standalone)').matches) {
-  installButton.classList.add('hidden');
-}
-
-// Device Contact Access
-async function accessDeviceContacts() {
-  if ('contacts' in navigator && 'select' in navigator.contacts) {
-    try {
-      const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
-      if (contacts.length > 0) {
-        populateContactList(contacts);
-      } else {
-        showAlert('No contacts selected', 'warning');
-      }
-    } catch (err) {
-      console.error('Error accessing contacts:', err);
-      showAlert('Error accessing contacts. Please check permissions.', 'danger');
-    }
-  } else {
-    showAlert('Contact API not supported in your browser', 'warning');
-  }
-}
-
-// Populate contact list with device contacts
-function populateContactList(contacts) {
-  const contactList = document.getElementById('contact-list');
-  contactList.innerHTML = '';
-  
-  if (contacts.length === 0) {
-    const noContactsItem = document.createElement('div');
-    noContactsItem.className = 'contact-item';
-    noContactsItem.textContent = 'No contacts available';
-    contactList.appendChild(noContactsItem);
-    return;
-  }
-  
-  contacts.forEach(contact => {
-    const name = contact.name ? contact.name[0] : 'Unknown';
-    const phone = contact.tel ? contact.tel[0] : '';
-    
-    const contactItem = document.createElement('div');
-    contactItem.className = 'contact-item';
-    contactItem.setAttribute('data-number', phone);
-    contactItem.textContent = `${name} - ${phone}`;
-    
-    contactItem.addEventListener('click', () => {
-      document.getElementById('contact-no').value = phone;
-      document.getElementById('contact-person').value = name;
-      contactList.style.display = 'none';
-    });
-    
-    contactList.appendChild(contactItem);
-  });
-}
-
-// Excel Export Function
-function exportExcel() {
-  const month = document.getElementById('month-select').value;
-  const year = document.getElementById('year-select').value;
-  
-  // Filter reports by selected month and year
-  const filteredReports = allReports.filter(report => {
-    const reportDate = new Date(report.date);
-    return reportDate.getMonth() + 1 == month && reportDate.getFullYear() == year;
-  });
-  
-  if (filteredReports.length === 0) {
-    showAlert('No reports found for the selected period', 'danger');
-    return;
-  }
-  
-  // Prepare data for Excel
-  const excelData = filteredReports.map(report => ({
-    'Date': formatDate(report.date),
-    'Customer Name': report.customerName,
-    'Report No': report.reportNo,
-    'Contact Person': report.contactPerson || '',
-    'Contact No': report.contactNo || '',
-    'Visiting Purpose': report.visitingPurpose
-  }));
-  
-  // Create worksheet
-  const worksheet = XLSX.utils.json_to_sheet(excelData);
-  
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Visit Reports');
-  
-  // Generate Excel file
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const fileName = `Visit_Reports_${monthNames[month - 1]}_${year}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
-  
-  showAlert('Excel file generated successfully!', 'success');
-}
-</script>
+    </script>
 </body>
-
 </html>
-
-
-
