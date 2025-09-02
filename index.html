@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --primary: #2c3e50;
@@ -1231,6 +1232,154 @@
         
         // Initialize the app when the page loads
         document.addEventListener('DOMContentLoaded', init);
-    </script>
+    </script>4
+
+    <script>
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
+
+// Install Prompt Handling
+let deferredPrompt;
+const installButton = document.getElementById('install-button');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  // Show the install button
+  installButton.classList.remove('hidden');
+  
+  installButton.addEventListener('click', () => {
+    // Hide the install button
+    installButton.classList.add('hidden');
+    // Show the install prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  });
+});
+
+// App Installed Event
+window.addEventListener('appinstalled', () => {
+  console.log('PWA was installed');
+  installButton.classList.add('hidden');
+});
+
+// Check if app is already installed
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  installButton.classList.add('hidden');
+}
+
+// Device Contact Access
+async function accessDeviceContacts() {
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    try {
+      const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+      if (contacts.length > 0) {
+        populateContactList(contacts);
+      } else {
+        showAlert('No contacts selected', 'warning');
+      }
+    } catch (err) {
+      console.error('Error accessing contacts:', err);
+      showAlert('Error accessing contacts. Please check permissions.', 'danger');
+    }
+  } else {
+    showAlert('Contact API not supported in your browser', 'warning');
+  }
+}
+
+// Populate contact list with device contacts
+function populateContactList(contacts) {
+  const contactList = document.getElementById('contact-list');
+  contactList.innerHTML = '';
+  
+  if (contacts.length === 0) {
+    const noContactsItem = document.createElement('div');
+    noContactsItem.className = 'contact-item';
+    noContactsItem.textContent = 'No contacts available';
+    contactList.appendChild(noContactsItem);
+    return;
+  }
+  
+  contacts.forEach(contact => {
+    const name = contact.name ? contact.name[0] : 'Unknown';
+    const phone = contact.tel ? contact.tel[0] : '';
+    
+    const contactItem = document.createElement('div');
+    contactItem.className = 'contact-item';
+    contactItem.setAttribute('data-number', phone);
+    contactItem.textContent = `${name} - ${phone}`;
+    
+    contactItem.addEventListener('click', () => {
+      document.getElementById('contact-no').value = phone;
+      document.getElementById('contact-person').value = name;
+      contactList.style.display = 'none';
+    });
+    
+    contactList.appendChild(contactItem);
+  });
+}
+
+// Excel Export Function
+function exportExcel() {
+  const month = document.getElementById('month-select').value;
+  const year = document.getElementById('year-select').value;
+  
+  // Filter reports by selected month and year
+  const filteredReports = allReports.filter(report => {
+    const reportDate = new Date(report.date);
+    return reportDate.getMonth() + 1 == month && reportDate.getFullYear() == year;
+  });
+  
+  if (filteredReports.length === 0) {
+    showAlert('No reports found for the selected period', 'danger');
+    return;
+  }
+  
+  // Prepare data for Excel
+  const excelData = filteredReports.map(report => ({
+    'Date': formatDate(report.date),
+    'Customer Name': report.customerName,
+    'Report No': report.reportNo,
+    'Contact Person': report.contactPerson || '',
+    'Contact No': report.contactNo || '',
+    'Visiting Purpose': report.visitingPurpose
+  }));
+  
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Visit Reports');
+  
+  // Generate Excel file
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const fileName = `Visit_Reports_${monthNames[month - 1]}_${year}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+  
+  showAlert('Excel file generated successfully!', 'success');
+}
+</script>
 </body>
+
 </html>
