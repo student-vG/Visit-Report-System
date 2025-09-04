@@ -223,12 +223,12 @@
             <div class="download-section">
                 <h3><i class="fas fa-download"></i> Download App</h3>
                 <p>You can install this app on your device for offline use:</p>
-                
+<!--                 
                 <div id="install-button" class="hidden">
                     <button class="download-btn" id="installBtn">
                         <i class="fas fa-download"></i>Install App
                     </button>
-                </div>
+                </div> -->
                 
                 <div id="not-supported" class="hidden">
                     <p style="color: #e74c3c;">Your browser does not support app installation.</p>
@@ -290,24 +290,26 @@
                 </form>
             </div>
             <div class="modal-footer">
+                  <button class="btn-warning hidden" id="modal-edit-btn">
+                    <i class="fas fa-edit"></i>Edit
+                </button>
+                 <button class="btn-success" id="modal-save-btn">
+                    <i class="fas fa-save"></i>Save Changes
+                </button>
                 <button class="btn-danger" id="modal-delete-btn">
                     <i class="fas fa-trash"></i>Delete
                 </button>
                 <button class="btn-accent" id="modal-cancel-btn">
                     <i class="fas fa-times"></i>Cancel
                 </button>
-                <button class="btn-success" id="modal-save-btn">
-                    <i class="fas fa-save"></i>Save Changes
-                </button>
-                <button class="btn-warning hidden" id="modal-edit-btn">
-                    <i class="fas fa-edit"></i>Edit
-                </button>
+               
+              
             </div>
         </div>
     </div>
 
     <footer style="text-align: center; font-size:16px;">
-        <p><i class="fa-solid fa-copyright" style=" color:rgb(143, 143, 143);"></i> 2025 vG All Right reserved </p>
+        <p><i class="fa-solid fa-copyright" style=" color:rgb(143, 143, 143);"></i> 2025-26 vG All Right reserved </p>
     </footer>
 
     <script src="js/app.js"></script>
@@ -325,5 +327,6 @@
         }
     </script>
 </body>
+
 
 </html>
