@@ -1061,4 +1061,10 @@ function showAlert(message, type) {
 }
 
 // Initialize the app when the page loads
+
 document.addEventListener('DOMContentLoaded', init);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js")
+    .then(() => console.log("Service Worker Registered"));
+}
