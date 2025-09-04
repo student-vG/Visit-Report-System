@@ -1,0 +1,11 @@
+{
+  "name": "Rolon Seals Visit Report System",
+  "short_name": "Visit Reports",
+  "description": "Efficiently manage and track customer visits",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2c3e50",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait"
+  
+}

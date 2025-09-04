@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="Rolon Seals Visit Report System - Efficiently manage and track customer visits">
+    <title>Rolon Seals Visit Report System</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0d6efd" />
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-clipboard-list logo-icon"></i>
+                <h1>Rolon Seals Visit Report System</h1>
+            </div>
+            <p>Efficiently manage and track customer visits</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="entry">
+                <i class="fas fa-pen-to-square"></i>Data Entry
+            </div>
+            <div class="tab" data-tab="view">
+                <i class="fas fa-table"></i>View Reports
+            </div>
+            <div class="tab" data-tab="export">
+                <i class="fas fa-file-export"></i>Export Data
+            </div>
+        </div>
+
+        <div id="entry-section" class="card">
+            <h2><i class="fas fa-pen"></i> Add Visit Report</h2>
+
+            <div class="instructions">
+                <p><i class="fas fa-info-circle"></i> Choose between single day entry or multiple days entry mode</p>
+            </div>
+
+            <div class="form-group">
+                <label for="entry-type">Entry Type</label>
+                <select id="entry-type" class="form-control">
+                    <option value="single">Single Day Entry</option>
+                    <option value="multiple">Multiple Days Entry</option>
+                </select>
+            </div>
+
+            <form id="visit-form">
+                <div class="form-group">
+                    <label for="serial-no">Serial No</label>
+                    <input type="number" id="serial-no" required>
+                    <small style="color:#666;">Enter starting serial number</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <div class="date-input-container">
+                        <input type="date" id="date" required>
+                        <button type="button" class="date-today-btn hidden" id="today-btn">Today</button>
+                        <button type="button" class="date-yesterday-btn hidden" id="yesterday-btn">Yesterday</button>
+                    </div>
+                </div>
+
+                <div class="form-group autocomplete-container">
+                    <label for="customer-name">Customer Name</label>
+                    <input type="text" id="customer-name" required>
+                    <div class="autocomplete-list" id="customer-autocomplete"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="report-no">Visit Report No</label>
+                    <input type="text" id="report-no" required readonly>
+                    <small style="color:#666;">Report number is auto-generated</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact-person">Contact Person</label>
+                    <input type="text" id="contact-person">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact-no">Contact No</label>
+                    <div style="position: relative;">
+                        <input type="tel" id="contact-no">
+                        <div class="contact-selector" id="contact-selector">
+                            <i class="fas fa-address-book"></i>
+                        </div>
+                        <div class="contact-list" id="contact-list">
+                            <div class="contact-item" id="no-contacts">No contacts available. Click to access device
+                                contacts.</div>
+                        </div>
+                    </div>
+                    <div class="mobile-contact-info">
+                        <i class="fas fa-mobile-alt"></i> On mobile devices, you can access your device contacts
+                    </div>
+                </div>
+
+                <div class="form-group autocomplete-container">
+                    <label for="visiting-purpose">Visiting Purpose</label>
+                    <textarea id="visiting-purpose"></textarea>
+                    <div class="autocomplete-list" id="purpose-autocomplete"></div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn-success">
+                        <i class="fas fa-save"></i>Save Entry
+                    </button>
+                    <button type="button" id="clear-form" class="btn-danger">
+                        <i class="fas fa-trash"></i>Clear Form
+                    </button>
+                </div>
+            </form>
+
+            <div class="recent-entries" id="recent-entries">
+                <h3><i class="fas fa-history"></i> Recent Entries</h3>
+                <div id="recent-entries-list">
+                    <p>No recent entries yet. Your entries will appear here.</p>
+                </div>
+            </div>
+
+            <div id="multiple-entry" class="hidden">
+                <h3><i class="fas fa-list"></i> Multiple Entries</h3>
+                <div id="multiple-entries-list"></div>
+                <button id="save-multiple" class="btn-accent">
+                    <i class="fas fa-database"></i>Save All Entries
+                </button>
+            </div>
+        </div>
+
+        <div id="view-section" class="card hidden">
+            <h2><i class="fas fa-table"></i> Visit Reports</h2>
+
+            <div class="form-group">
+                <input type="text" id="search-reports" placeholder="Search reports...">
+            </div>
+
+            <div id="reports-table-container">
+                <table id="reports-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="serialNo">Serial No <span class="sort-indicator">↕</span></th>
+                            <th data-sort="date">Date <span class="sort-indicator">↕</span></th>
+                            <th data-sort="customerName">Customer Name <span class="sort-indicator">↕</span></th>
+                            <th data-sort="reportNo">Report No <span class="sort-indicator">↕</span></th>
+                            <th data-sort="contactPerson">Contact Person <span class="sort-indicator">↕</span></th>
+                            <th data-sort="contactNo">Contact No <span class="sort-indicator">↕</span></th>
+                            <th>Visiting Purpose</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-body">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="export-section" class="card hidden">
+            <h2><i class="fas fa-file-export"></i> Export Reports</h2>
+
+            <div class="instructions">
+                <p><i class="fas fa-info-circle"></i> Select a month and year to generate reports</p>
+            </div>
+
+            <div class="form-group">
+                <label for="month-select">Select Month</label>
+                <select id="month-select">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5" selected>May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="year-select">Select Year</label>
+                <input type="number" id="year-select" min="2020" max="2030" value="2025">
+            </div>
+
+            <div class="form-group">
+                <label for="sort-export">Sort Export By</label>
+                <select id="sort-export">
+                    <option value="serialNo">Serial No</option>
+                    <option value="date" selected>Date</option>
+                    <option value="customerName">Customer Name</option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button id="generate-pdf" class="btn-success">
+                    <i class="fas fa-file-pdf"></i>Generate PDF Report
+                </button>
+                <button id="export-excel" class="btn-warning">
+                    <i class="fas fa-file-excel"></i>Export to Excel
+                </button>
+                <button id="export-json" class="btn-accent">
+                    <i class="fas fa-file-code"></i>Export as JSON
+                </button>
+            </div>
+
+            <div class="download-section">
+                <h3><i class="fas fa-download"></i> Download App</h3>
+                <p>You can install this app on your device for offline use:</p>
+                
+                <div id="install-button" class="hidden">
+                    <button class="download-btn" id="installBtn">
+                        <i class="fas fa-download"></i>Install App
+                    </button>
+                </div>
+                
+                <div id="not-supported" class="hidden">
+                    <p style="color: #e74c3c;">Your browser does not support app installation.</p>
+                </div>
+                <p><small>In Chrome, look for the "Install" icon in the address bar</small></p>
+            </div>
+        </div>
+
+        <div id="alert-area"></div>
+    </div>
+
+    <!-- Modal for Viewing/Editing Reports -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">View Report</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="modal-form">
+                    <input type="hidden" id="modal-index">
+                    <div class="form-group">
+                        <label for="modal-serial-no">Serial No</label>
+                        <input type="number" id="modal-serial-no" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-date">Date</label>
+                        <div class="date-input-container">
+                            <input type="date" id="modal-date" required>
+                            <button type="button" class="date-today-btn hidden" id="modal-today-btn">Today</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-customer-name">Customer Name</label>
+                        <input type="text" id="modal-customer-name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-report-no">Visit Report No</label>
+                        <input type="text" id="modal-report-no" required readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-contact-person">Contact Person</label>
+                        <input type="text" id="modal-contact-person">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-contact-no">Contact No</label>
+                        <input type="tel" id="modal-contact-no">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-visiting-purpose">Visiting Purpose</label>
+                        <textarea id="modal-visiting-purpose"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="modal-delete-btn">
+                    <i class="fas fa-trash"></i>Delete
+                </button>
+                <button class="btn-accent" id="modal-cancel-btn">
+                    <i class="fas fa-times"></i>Cancel
+                </button>
+                <button class="btn-success" id="modal-save-btn">
+                    <i class="fas fa-save"></i>Save Changes
+                </button>
+                <button class="btn-warning hidden" id="modal-edit-btn">
+                    <i class="fas fa-edit"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; font-size:16px;">
+        <p><i class="fa-solid fa-copyright" style=" color:rgb(143, 143, 143);"></i> 2025 vG All Right reserved </p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(function (registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function (error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
