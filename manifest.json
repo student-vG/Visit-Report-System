@@ -1,12 +1,20 @@
 {
-  "name": "Rolon Seals Visit Report System",
-  "short_name": "Visit Reports",
-  "description": "Efficiently manage and track customer visits",
-  "start_url": "./index.html",
+  "name": "Rolon Visit Report",
+  "short_name": "RolonReport",
+  "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#2c3e50",
-  "theme_color": "#2c3e50",
-  "orientation": "portrait"
-  
-
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
